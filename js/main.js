@@ -23,12 +23,12 @@ class Color {
 }
 
 const CellTypes = {
-  air: 'rgba(0, 0, 0, 0)',
-  red: 'rgba(170, 0, 0, 1)',
-  green: 'rgba(0, 170, 0, 1)',
-  blue: 'rgba(0, 0, 170, 1)',
-  orange: 'rgba(218, 135, 48, 1)',
-  yellow: 'rgba(244, 252, 78, 1)'
+  air: new Color(0, 0, 0, 0),
+  red: new Color(170, 0, 0, 1),
+  green: new Color(0, 170, 0, 1),
+  blue: new Color(0, 0, 170, 1),
+  orange: new Color(218, 135, 48, 1),
+  yellow: new Color(244, 252, 78, 1)
 }
 
 const map = [
@@ -109,8 +109,10 @@ class RayCaster {
     this.ctx = this.canvas.getContext('2d')
     this.FOV = 0.75 // field of view
     this.running = true
-    this.turnSensitivity = Math.PI / 180
+    this.turnSensitivity = Math.PI / 180 * 2
     this.moveSensitivity = 0.1
+    this.miniMapPos = new Point(20, 20)
+    this.wallHeight = 50
 
     this.player = new Player(0, 1.5, 1.5)
     this.map = new Map(map)
@@ -136,13 +138,11 @@ class RayCaster {
         this.player.pos.x -= Math.cos(facing) * this.moveSensitivity
         this.player.pos.y -= Math.sin(facing) * this.moveSensitivity
         break;
-      // default:
-
     }
   }
 
   update() {
-    // this.player.theta += Math.PI / (360 * 2)
+
   }
 
   render() {
@@ -153,8 +153,9 @@ class RayCaster {
     this.ctx.fillStyle = '#aaaaaa'
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
-    this.drawMiniMap()
+    this.rays = []
     this.castRays()
+    this.drawMiniMap()
   }
 
   scaleAngle(theta) {
@@ -167,24 +168,25 @@ class RayCaster {
     let lineWidth = this.canvas.width / (this.FOV * Math.PI / 0.006)
 
     for (let theta = this.player.theta; theta < this.player.theta + this.FOV * Math.PI; theta += 0.005) {
-      // console.log('theta', theta);
       let ray = new Ray(theta, this.player.pos.x, this.player.pos.y)
+      this.rays.push(ray)
 
       let currentCell; // declare here for scope purposes
       do {
         let pos = ray.nextCell()
         currentCell = this.map[Math.round(pos.y)][Math.round(pos.x)]
-        this.ctx.fillStyle = currentCell
+        this.ctx.fillStyle = currentCell.toString()
 
         let heightRatio = (8 - this.player.pos.dist(pos)) / this.canvas.height
-        let height = heightRatio * (this.canvas.height) * 10
-        // console.log(height);
-        let y0 = (this.canvas.height / 2) - height
-        // let y1 = (this.canvas.height / 2) +
+        let height = heightRatio * (this.canvas.height) * this.wallHeight
 
-        this.ctx.fillRect(this.scaleAngle(theta) - lineWidth / 2, y0, lineWidth, height * 2)
-
-      } while (parseInt(currentCell[currentCell.length-2]) < 1)
+        this.ctx.fillRect(
+          this.scaleAngle(theta) - lineWidth / 2,
+          (this.canvas.height / 2) - height,
+          lineWidth,
+          height * 2
+        )
+      } while (currentCell.a < 1)
     }
   }
 
@@ -192,14 +194,36 @@ class RayCaster {
     let [posX, posY] = [this.miniMapPos.x, this.miniMapPos.y]
     let tileWidth = 15
 
-    this.ctx.fillStyle = 'white'
-    this.ctx.fillRect()
+    this.ctx.fillStyle = '#ffffff'
+    this.ctx.fillRect(
+      posX - (tileWidth / 2),
+      posY - (tileWidth / 2),
+      (this.map.length * tileWidth) + tileWidth,
+      (this.map[0].length * tileWidth) + tileWidth
+    )
 
     for (let y in this.map) {
       for (let x in this.map[y]) {
-        this.ctx.fillStyle = this.map[y][x]
+        this.ctx.fillStyle = this.map[y][x].toString()
         this.ctx.fillRect(x * tileWidth + posX, y * tileWidth + posY, tileWidth, tileWidth)
       }
+    }
+
+    this.ctx.strokeStyle = 'rgba(0, 0, 0, 1)'
+    this.ctx.beginPath()
+    this.ctx.arc(
+      this.player.pos.x * tileWidth + posX,
+      this.player.pos.y * tileWidth + posY,
+      tileWidth / 2, 0, 2 * Math.PI
+    )
+    this.ctx.stroke()
+
+    this.ctx.strokeStyle = 'rgba(126, 126, 126, 0.1)'
+    for(let i in this.rays) {
+      this.ctx.beginPath()
+      this.ctx.moveTo(this.player.pos.x * tileWidth + posX, this.player.pos.y * tileWidth + posY)
+      this.ctx.lineTo(this.rays[i].pos.x * tileWidth + (tileWidth/2) + posX, this.rays[i].pos.y * tileWidth + (tileWidth/2) + posY)
+      this.ctx.stroke()
     }
   }
 }
