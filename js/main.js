@@ -109,10 +109,17 @@ class RayCaster {
     this.ctx = this.canvas.getContext('2d')
     this.FOV = 0.75 // field of view
     this.running = true
-    this.turnSensitivity = Math.PI / 180 * 2
+    this.turnSensitivity = Math.PI / 90
     this.moveSensitivity = 0.1
     this.miniMapPos = new Point(20, 20)
     this.wallHeight = 50
+
+    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1
+    this.gui = new dat.GUI()
+    this.gui.add(this, 'FOV', 0.25, 1)
+    this.gui.add(this, 'Turn Speed', 0.5, 4).onChange((value) => this.turnSensitivity = Math.PI / 180 * value)
+    this.gui.add(this, 'Move Speed', 0.5, 4).onChange((value) => this.moveSensitivity = 0.1 * value)
+    this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.moveSensitivity = 50 * value)
 
     this.player = new Player(0, 1.5, 1.5)
     this.map = new Map(map)
