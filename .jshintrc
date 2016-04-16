@@ -1,0 +1,9 @@
+{
+  "esversion": 6,
+  "strict": "global",
+  "asi": true,
+  "browser": true,
+  "predef": [
+    "console"
+  ]
+}

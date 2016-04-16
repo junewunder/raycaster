@@ -1,0 +1,32 @@
+{
+  "name": "raycaster",
+  "version": "0.0.1",
+  "description": "Raycaster in javascript",
+  "main": "index.html",
+  "scripts": {
+    "test": "open index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaywunder/raycaster.git"
+  },
+  "keywords": [
+    "ray",
+    "trig",
+    "fun"
+  ],
+  "author": "Jacob Wunder <jacob@jacobwunder.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jaywunder/raycaster/issues"
+  },
+  "homepage": "https://github.com/jaywunder/raycaster#readme",
+  "devDependencies": {
+    "babelify": "^7.2.0",
+    "grunt": "^1.0.1",
+    "grunt-babel": "^6.0.0",
+    "grunt-browserify": "^5.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "load-grunt-tasks": "^3.5.0"
+  }
+}
