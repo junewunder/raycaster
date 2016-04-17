@@ -18,7 +18,10 @@ class Color {
   }
 
   toString() {
-    return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`
+    let r = Math.round(Math.max(this.r, 0))
+    let g = Math.round(Math.max(this.g, 0))
+    let b = Math.round(Math.max(this.b, 0))
+    return `rgba(${r}, ${g}, ${b}, ${Math.max(this.a, 0)})`
   }
 }
 
@@ -109,19 +112,28 @@ class RayCaster {
     this.ctx = this.canvas.getContext('2d')
     this.FOV = 0.75 // field of view
     this.running = true
-    this.turnSensitivity = Math.PI / 180 * 2
+    this.turnSensitivity = Math.PI / 90
     this.moveSensitivity = 0.1
     this.miniMapPos = new Point(20, 20)
-    this.wallHeight = 50
+    this.wallHeight = 25
+
+    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1
+    this.gui = new dat.GUI()
+    this.gui.add(this, 'FOV', 0.25, 1)
+    this.gui.add(this, 'Turn Speed', 0.5, 4).onChange((value) => this.turnSensitivity = Math.PI / 180 * value)
+    this.gui.add(this, 'Move Speed', 0.5, 4).onChange((value) => this.moveSensitivity = 0.1 * value)
+    this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.moveSensitivity = 50 * value)
 
     this.player = new Player(0, 1.5, 1.5)
     this.map = new Map(map)
+
+    this.maxDist = Math.sqrt(Math.pow(this.map.length, 2) + Math.pow(this.map[0].length, 2))
 
     document.addEventListener('keypress', event => this.handleKeyboardInput(event))
   }
 
   handleKeyboardInput(event) {
-    console.log(event.which);
+    // console.log(event.which);
     let facing = this.player.theta + (this.FOV * Math.PI / 2)
     switch (event.which) {
       case 100:
@@ -175,11 +187,10 @@ class RayCaster {
       do {
         let pos = ray.nextCell()
         currentCell = this.map[Math.round(pos.y)][Math.round(pos.x)]
-        this.ctx.fillStyle = currentCell.toString()
-
-        let heightRatio = (8 - this.player.pos.dist(pos)) / this.canvas.height
+        let heightRatio = (this.maxDist - this.player.pos.dist(pos)) / this.canvas.height
         let height = heightRatio * (this.canvas.height) * this.wallHeight
 
+        this.ctx.fillStyle = currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString()
         this.ctx.fillRect(
           this.scaleAngle(theta) - lineWidth / 2,
           (this.canvas.height / 2) - height,

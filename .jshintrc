@@ -4,6 +4,7 @@
   "asi": true,
   "browser": true,
   "predef": [
-    "console"
+    "console",
+    "dat"
   ]
 }
