@@ -97,12 +97,12 @@ class Ray {
     this.theta = theta
   }
 
-  nextCell() {
+  nextCell(step) {
     let prevPos = this.pos.copy()
     let i = 0
     while(true) { // this will loop until it returns a value
-      this.pos.x += Math.cos(this.theta) * 0.01
-      this.pos.y += Math.sin(this.theta) * 0.01
+      this.pos.x += Math.cos(this.theta) * step
+      this.pos.y += Math.sin(this.theta) * step
 
       if (Math.round(this.pos.x) !== Math.round(prevPos.x) ||
           Math.round(this.pos.y) !== Math.round(prevPos.y)) // weird indentation
@@ -160,16 +160,18 @@ class RayCaster {
     this.moveSensitivity = 0.1
     this.miniMapPos = new Point(20, 20)
     this.wallHeight = 0.7
+    this.resolution = 0.1
 
-    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1
+    this.player = new Player(0, 1.5, 1.5)
+    this.map = new Map(map)
+
+    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1; this['Resolution '] = 1
     this.gui = new dat.GUI()
     this.gui.add(this, 'FOV', 0.25, 1)
     this.gui.add(this, 'Turn Speed', 0.5, 4).onChange((value) => this.turnSensitivity = Math.PI / 180 * value)
     this.gui.add(this, 'Move Speed', 0.5, 4).onChange((value) => this.moveSensitivity = 0.1 * value)
     this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.wallHeight = 0.7 * value)
-
-    this.player = new Player(0, 1.5, 1.5)
-    this.map = new Map(map)
+    this.gui.add(this, 'Resolution ', 1, 10).onChange((value) => this.resolution = 0.1 / value)
 
     this.maxDist = Math.sqrt(Math.pow(this.map.length, 2) + Math.pow(this.map[0].length, 2))
 
@@ -274,7 +276,7 @@ class RayCaster {
 
       let currentCell; // declare here for scope purposes
       do {
-        let pos = ray.nextCell()
+        let pos = ray.nextCell(this.resolution)
         currentCell = this.map[Math.round(pos.y)][Math.round(pos.x)]
         let heightRatio = this.canvas.height / (this.player.pos.dist(pos) * 0.7)
         let height = heightRatio * this.wallHeight
