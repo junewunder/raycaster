@@ -34,16 +34,46 @@ const CellTypes = {
   yellow: new Color(244, 252, 78, 1)
 }
 
-const map = [
-  [CellTypes.red, CellTypes.red, CellTypes.yellow, CellTypes.red,   CellTypes.yellow,    CellTypes.red, CellTypes.yellow, CellTypes.red],
-  [CellTypes.yellow, CellTypes.air, CellTypes.air, CellTypes.air,   CellTypes.air,    CellTypes.air, CellTypes.air, CellTypes.red],
-  [CellTypes.red, CellTypes.air, CellTypes.air, CellTypes.air,   CellTypes.air,    CellTypes.air, CellTypes.air, CellTypes.yellow],
-  [CellTypes.yellow, CellTypes.air, CellTypes.air, CellTypes.blue,  CellTypes.yellow, CellTypes.air, CellTypes.air, CellTypes.red],
-  [CellTypes.red, CellTypes.air, CellTypes.air, CellTypes.green, CellTypes.orange, CellTypes.air, CellTypes.air, CellTypes.yellow],
-  [CellTypes.yellow, CellTypes.air, CellTypes.air, CellTypes.air,   CellTypes.air,    CellTypes.air, CellTypes.air, CellTypes.red],
-  [CellTypes.red, CellTypes.air, CellTypes.air, CellTypes.air,   CellTypes.air,    CellTypes.air, CellTypes.air, CellTypes.yellow],
-  [CellTypes.red, CellTypes.yellow, CellTypes.red, CellTypes.yellow,   CellTypes.red,    CellTypes.yellow, CellTypes.red, CellTypes.red],
-]
+const CellShortNames = {
+  ' ': CellTypes.air,
+  'r': CellTypes.red,
+  'g': CellTypes.green,
+  'b': CellTypes.blue,
+  'o': CellTypes.orange,
+  'y': CellTypes.yellow,
+}
+
+const KEY = {
+  D: 68,
+  W: 87,
+  A: 65,
+  S: 83,
+  RIGHT: 39,
+  UP: 38,
+  LEFT: 37,
+  DOWN: 40
+}
+
+const map =
+`ryryryryryryryryryryryryryryryryryryryr
+r                                     r
+y                                     y
+y                                     y
+r                                     r
+y                                     y
+r                                     r
+y                                     y
+r                                     r
+ryryryryryryryryryryryryryryryryryryryr
+`
+// `rryryryr
+// y      r
+// r      y
+// y  by  r
+// r  go  y
+// y      r
+// r      y
+// ryryryrr`
 
 class Point {
   constructor(x = 0, y = 0) {
@@ -100,7 +130,21 @@ class Player {
 
 class Map extends Array {
   constructor(map) {
-    super(...map)
+    if(Array.isArray(map))
+      super(...map)
+    else if (typeof map === 'string'){
+      super()
+      this.push(...this.fromString(map))
+    } else {
+      console.error('Error with map creation, map must either be an array or a string')
+    }
+  }
+
+  fromString(str) {
+    let arr = str.split('\n')
+    arr = arr.map((item, i) => item.split(''))
+    arr = arr.map((item) => item.map((item) => CellShortNames[item]))
+    return arr
   }
 }
 
@@ -110,51 +154,92 @@ class RayCaster {
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight
     this.ctx = this.canvas.getContext('2d')
-    this.FOV = 0.75 // field of view
+    this.FOV = 0.5 // field of view
+    this.resolution = 1
     this.running = true
     this.turnSensitivity = Math.PI / 90
     this.moveSensitivity = 0.1
     this.miniMapPos = new Point(20, 20)
-    this.wallHeight = 25
+    this.wallHeight = 0.7
 
     this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1
     this.gui = new dat.GUI()
     this.gui.add(this, 'FOV', 0.25, 1)
     this.gui.add(this, 'Turn Speed', 0.5, 4).onChange((value) => this.turnSensitivity = Math.PI / 180 * value)
     this.gui.add(this, 'Move Speed', 0.5, 4).onChange((value) => this.moveSensitivity = 0.1 * value)
-    this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.moveSensitivity = 50 * value)
+    this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.wallHeight = 0.7 * value)
 
     this.player = new Player(0, 1.5, 1.5)
     this.map = new Map(map)
 
     this.maxDist = Math.sqrt(Math.pow(this.map.length, 2) + Math.pow(this.map[0].length, 2))
 
-    document.addEventListener('keypress', event => this.handleKeyboardInput(event))
+    this.input = {
+      right: false,
+      up: false,
+      left: false,
+      down: false
+    }
+
+    document.addEventListener('keydown', event => this.press(event))
+    document.addEventListener('keyup', event => this.release(event))
   }
 
-  handleKeyboardInput(event) {
-    // console.log(event.which);
-    let facing = this.player.theta + (this.FOV * Math.PI / 2)
-    switch (event.which) {
-      case 100:
-        this.player.theta += this.turnSensitivity
-        break;
-      case 97:
-        this.player.theta -= this.turnSensitivity
-        break;
-      case 119:
-        this.player.pos.x += Math.cos(facing) * this.moveSensitivity
-        this.player.pos.y += Math.sin(facing) * this.moveSensitivity
-        break;
-      case 115:
-        this.player.pos.x -= Math.cos(facing) * this.moveSensitivity
-        this.player.pos.y -= Math.sin(facing) * this.moveSensitivity
-        break;
+  press(evt) {
+    var code = evt.keyCode;
+    switch(code) {
+      case KEY.RIGHT:
+      case KEY.D: this.input.right = true; break;
+
+      case KEY.UP:
+      case KEY.W: this.input.up = true; break;
+
+      case KEY.LEFT:
+      case KEY.A: this.input.left = true; break;
+
+      case KEY.DOWN:
+      case KEY.S: this.input.down = true; break;
+    }
+  }
+
+  release(evt) {
+    var code = evt.keyCode;
+    switch(code) {
+      case KEY.RIGHT:
+      case KEY.D: this.input.right = false; break;
+
+      case KEY.UP:
+      case KEY.W: this.input.up = false; break;
+
+      case KEY.LEFT:
+      case KEY.A: this.input.left = false; break;
+
+      case KEY.DOWN:
+      case KEY.S: this.input.down = false; break;
+
+      case KEY.Q: break;
     }
   }
 
   update() {
+    let facing = this.player.theta + (this.FOV * Math.PI / 2)
+    if (this.input.up) {
+      this.player.pos.x += Math.cos(facing) * this.moveSensitivity
+      this.player.pos.y += Math.sin(facing) * this.moveSensitivity
+    }
 
+    if (this.input.down) {
+      this.player.pos.x -= Math.cos(facing) * this.moveSensitivity
+      this.player.pos.y -= Math.sin(facing) * this.moveSensitivity
+    }
+
+    if (this.input.left) {
+      this.player.theta -= this.turnSensitivity
+    }
+
+    if (this.input.right) {
+      this.player.theta += this.turnSensitivity
+    }
   }
 
   render() {
@@ -162,8 +247,13 @@ class RayCaster {
 
     if (!this.running) return;
 
+    // sky
+    this.ctx.fillStyle = '#7fbedd'
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2)
+
+    // floor
     this.ctx.fillStyle = '#aaaaaa'
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2)
 
     this.rays = []
     this.castRays()
@@ -187,8 +277,8 @@ class RayCaster {
       do {
         let pos = ray.nextCell()
         currentCell = this.map[Math.round(pos.y)][Math.round(pos.x)]
-        let heightRatio = (this.maxDist - this.player.pos.dist(pos)) / this.canvas.height
-        let height = heightRatio * (this.canvas.height) * this.wallHeight
+        let heightRatio = this.canvas.height / (this.player.pos.dist(pos) * 0.7)
+        let height = heightRatio * this.wallHeight
 
         this.ctx.fillStyle = currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString()
         this.ctx.fillRect(
@@ -209,8 +299,8 @@ class RayCaster {
     this.ctx.fillRect(
       posX - (tileWidth / 2),
       posY - (tileWidth / 2),
-      (this.map.length * tileWidth) + tileWidth,
-      (this.map[0].length * tileWidth) + tileWidth
+      (this.map[0].length * tileWidth) + tileWidth,
+      ((this.map.length - 1) * tileWidth) + tileWidth
     )
 
     for (let y in this.map) {
