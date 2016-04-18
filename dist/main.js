@@ -294,7 +294,7 @@ class RayCaster {
     let tileWidth = 15;
 
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.fillRect(posX - tileWidth / 2, posY - tileWidth / 2, this.map[0].length * tileWidth + tileWidth, (this.map.length - 1) * tileWidth + tileWidth);
+    this.ctx.fillRect(posX - tileWidth / 2, posY - tileWidth / 2, this.map[0].length * tileWidth + tileWidth, this.map.length * tileWidth + tileWidth);
 
     for (let y in this.map) {
       for (let x in this.map[y]) {
