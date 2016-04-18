@@ -64,8 +64,7 @@ y                                     y
 r                                     r
 y                                     y
 r                                     r
-ryryryryryryryryryryryryryryryryryryryr
-`
+ryryryryryryryryryryryryryryryryryryryr`
 // `rryryryr
 // y      r
 // r      y
@@ -300,7 +299,7 @@ class RayCaster {
       posX - (tileWidth / 2),
       posY - (tileWidth / 2),
       (this.map[0].length * tileWidth) + tileWidth,
-      ((this.map.length - 1) * tileWidth) + tileWidth
+      ((this.map.length) * tileWidth) + tileWidth
     )
 
     for (let y in this.map) {
