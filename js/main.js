@@ -55,25 +55,25 @@ const KEY = {
 }
 
 const map =
-`ryryryryryryryryryryryryryryryryryryryr
-r                                     r
-y                                     y
-y                                     y
-r                                     r
-y                                     y
-r                                     r
-y                                     y
-r                                     r
-ryryryryryryryryryryryryryryryryryryryr
-`
-// `rryryryr
-// y      r
-// r      y
-// y  by  r
-// r  go  y
-// y      r
-// r      y
-// ryryryrr`
+// `ryryryryryryryryryryryryryryryryryryryr
+// r                                     r
+// y                                     y
+// y                                     y
+// r                                     r
+// y                                     y
+// r                                     r
+// y                                     y
+// r                                     r
+// ryryryryryryryryryryryryryryryryryryryr
+// `
+`rryryryr
+y      r
+r      y
+y  by  r
+r  go  y
+y      r
+r      y
+ryryryrr`
 
 class Point {
   constructor(x = 0, y = 0) {
