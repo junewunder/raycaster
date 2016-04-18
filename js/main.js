@@ -28,9 +28,9 @@ class Color {
 const CellTypes = {
   air: new Color(0, 0, 0, 0),
   red: new Color(170, 0, 0, 1),
-  green: new Color(0, 170, 0, 1),
-  blue: new Color(0, 0, 170, 1),
-  orange: new Color(218, 135, 48, 1),
+  green: new Color(0, 170, 0, 0.5),
+  blue: new Color(0, 0, 170, 0.5),
+  orange: new Color(218, 135, 48, 0.5),
   yellow: new Color(244, 252, 78, 1)
 }
 
@@ -57,11 +57,11 @@ const KEY = {
 const map =
 `ryryryryryryryryryryryryryryryryryryryr
 r                                     r
-y                                     y
-y                                     y
+y    bg                               y
+y    yo                               y
 r                                     r
-y                                     y
-r                                     r
+y                   b                 y
+r                  rg                 r
 y                                     y
 r                                     r
 ryryryryryryryryryryryryryryryryryryryr`
@@ -273,6 +273,7 @@ class RayCaster {
     for (let theta = this.player.theta; theta < this.player.theta + this.FOV * Math.PI; theta += 0.005) {
       let ray = new Ray(theta, this.player.pos.x, this.player.pos.y)
       this.rays.push(ray)
+      let colors = []
 
       let currentCell; // declare here for scope purposes
       do {
@@ -281,14 +282,22 @@ class RayCaster {
         let heightRatio = this.canvas.height / (this.player.pos.dist(pos) * 0.7)
         let height = heightRatio * this.wallHeight
 
-        this.ctx.fillStyle = currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString()
+        colors.push({
+          color: currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString(),
+          height
+        })
+      } while (currentCell.a < 1)
+
+      for (let i in colors) {
+        let color = colors[colors.length-1 - i]
+        this.ctx.fillStyle = color.color
         this.ctx.fillRect(
           this.scaleAngle(theta) - lineWidth / 2,
-          (this.canvas.height / 2) - height,
+          (this.canvas.height / 2) - color.height,
           lineWidth,
-          height * 2
+          color.height * 2
         )
-      } while (currentCell.a < 1)
+      }
     }
   }
 
