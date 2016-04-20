@@ -28,9 +28,9 @@ class Color {
 const CellTypes = {
   air: new Color(0, 0, 0, 0),
   red: new Color(170, 0, 0, 1),
-  green: new Color(0, 170, 0, 1),
-  blue: new Color(0, 0, 170, 1),
-  orange: new Color(218, 135, 48, 1),
+  green: new Color(0, 170, 0, 0.5),
+  blue: new Color(0, 0, 170, 0.5),
+  orange: new Color(218, 135, 48, 0.5),
   yellow: new Color(244, 252, 78, 1)
 }
 
@@ -55,25 +55,24 @@ const KEY = {
 }
 
 const map =
-// `ryryryryryryryryryryryryryryryryryryryr
-// r                                     r
-// y                                     y
-// y                                     y
-// r                                     r
-// y                                     y
-// r                                     r
-// y                                     y
-// r                                     r
-// ryryryryryryryryryryryryryryryryryryryr
-// `
-`rryryryr
-y      r
-r      y
-y  by  r
-r  go  y
-y      r
-r      y
-ryryryrr`
+`ryryryryryryryryryryryryryryryryryryryr
+r                                     r
+y    bg                               y
+y    yo                               y
+r                                     r
+y                   b                 y
+r                  rg                 r
+y                                     y
+r                                     r
+ryryryryryryryryryryryryryryryryryryryr`
+// `rryryryr
+// y      r
+// r      y
+// y  by  r
+// r  go  y
+// y      r
+// r      y
+// ryryryrr`
 
 class Point {
   constructor(x = 0, y = 0) {
@@ -98,12 +97,12 @@ class Ray {
     this.theta = theta
   }
 
-  nextCell() {
+  nextCell(step) {
     let prevPos = this.pos.copy()
     let i = 0
     while(true) { // this will loop until it returns a value
-      this.pos.x += Math.cos(this.theta) * 0.01
-      this.pos.y += Math.sin(this.theta) * 0.01
+      this.pos.x += Math.cos(this.theta) * step
+      this.pos.y += Math.sin(this.theta) * step
 
       if (Math.round(this.pos.x) !== Math.round(prevPos.x) ||
           Math.round(this.pos.y) !== Math.round(prevPos.y)) // weird indentation
@@ -161,16 +160,18 @@ class RayCaster {
     this.moveSensitivity = 0.1
     this.miniMapPos = new Point(20, 20)
     this.wallHeight = 0.7
+    this.resolution = 0.1
 
-    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1
+    this.player = new Player(0, 1.5, 1.5)
+    this.map = new Map(map)
+
+    this['Turn Speed'] = 1; this['Move Speed'] = 1; this['Wall Height'] = 1; this['Resolution '] = 1
     this.gui = new dat.GUI()
     this.gui.add(this, 'FOV', 0.25, 1)
     this.gui.add(this, 'Turn Speed', 0.5, 4).onChange((value) => this.turnSensitivity = Math.PI / 180 * value)
     this.gui.add(this, 'Move Speed', 0.5, 4).onChange((value) => this.moveSensitivity = 0.1 * value)
     this.gui.add(this, 'Wall Height', 0.1, 1.5).onChange((value) => this.wallHeight = 0.7 * value)
-
-    this.player = new Player(0, 1.5, 1.5)
-    this.map = new Map(map)
+    this.gui.add(this, 'Resolution ', 1, 10).onChange((value) => this.resolution = 0.1 / value)
 
     this.maxDist = Math.sqrt(Math.pow(this.map.length, 2) + Math.pow(this.map[0].length, 2))
 
@@ -272,22 +273,31 @@ class RayCaster {
     for (let theta = this.player.theta; theta < this.player.theta + this.FOV * Math.PI; theta += 0.005) {
       let ray = new Ray(theta, this.player.pos.x, this.player.pos.y)
       this.rays.push(ray)
+      let colors = []
 
       let currentCell; // declare here for scope purposes
       do {
-        let pos = ray.nextCell()
+        let pos = ray.nextCell(this.resolution)
         currentCell = this.map[Math.round(pos.y)][Math.round(pos.x)]
         let heightRatio = this.canvas.height / (this.player.pos.dist(pos) * 0.7)
         let height = heightRatio * this.wallHeight
 
-        this.ctx.fillStyle = currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString()
+        colors.push({
+          color: currentCell.darken(this.player.pos.dist(pos) / this.maxDist * 1.1).toString(),
+          height
+        })
+      } while (currentCell.a < 1)
+
+      for (let i in colors) {
+        let color = colors[colors.length-1 - i]
+        this.ctx.fillStyle = color.color
         this.ctx.fillRect(
           this.scaleAngle(theta) - lineWidth / 2,
-          (this.canvas.height / 2) - height,
+          (this.canvas.height / 2) - color.height,
           lineWidth,
-          height * 2
+          color.height * 2
         )
-      } while (currentCell.a < 1)
+      }
     }
   }
 
