@@ -154,6 +154,7 @@ class RayCaster {
     this.miniMapPos = new Point(20, 20);
     this.wallHeight = 0.7;
     this.resolution = 0.1;
+    this.touching = false;
 
     this.player = new Player(0, 1.5, 1.5);
     this.map = new Map(map);
@@ -177,6 +178,55 @@ class RayCaster {
 
     document.addEventListener('keydown', event => this.press(event));
     document.addEventListener('keyup', event => this.release(event));
+    document.addEventListener('touchstart', event => this.touchstart(event));
+    document.addEventListener('touchmove', event => this.touchmove(event));
+    document.addEventListener('touchend', event => this.touchend(event));
+  }
+
+  touchstart(evt) {
+    const touch = evt.touches[0];
+    const xPos = touch.pageX / window.innerWidth;
+
+    if (0 <= xPos && xPos <= 0.4) {
+      this.input.right = false;
+      this.input.left = true;
+      this.input.up = false;
+    } else if (0.4 < xPos && xPos <= 0.6) {
+      this.input.right = false;
+      this.input.left = false;
+      this.input.up = true;
+    } else {
+      this.input.right = true;
+      this.input.left = false;
+      this.input.up = false;
+    }
+  }
+
+  touchend(evt) {
+    this.input.right = false;
+    this.input.left = false;
+    this.input.up = false;
+  }
+
+  touchmove(evt) {
+    console.log(evt);
+
+    const touch = evt.touches[0];
+    const xPos = touch.pageX / window.innerWidth;
+
+    if (0 <= xPos && xPos <= 0.4) {
+      this.input.right = false;
+      this.input.left = true;
+      this.input.up = false;
+    } else if (0.4 < xPos && xPos <= 0.6) {
+      this.input.right = false;
+      this.input.left = false;
+      this.input.up = true;
+    } else {
+      this.input.right = true;
+      this.input.left = false;
+      this.input.up = false;
+    }
   }
 
   press(evt) {
